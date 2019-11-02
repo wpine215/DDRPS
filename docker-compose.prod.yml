@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:12
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    environment:
+      - ./backend/.env.prod.db
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend:/app/backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env.prod
+    depends_on:
+      - db
+    command: ["gunicorn", "myproject.wsgi:application", "--bind 0.0.0.0:8000"]
+  frontend:
+    build: ./frontend
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    command: ["npm", "run"]
+
+volumes:
+  postgres_data:
+  node-modules:

@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:12
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: DATABASE_NAME_HERE
+      POSTGRES_USER: DATABASE_USER_HERE
+      POSTGRES_PASSWORD: DATABASE_PASSWORD_HERE
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend:/app/backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env.dev
+    stdin_open: true
+    tty: true
+    depends_on:
+      - db
+    command: ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+  frontend:
+    build: ./frontend
+    volumes:
+      - ./frontend:/app/frontend
+      - node_modules:/app/frontend/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
+    command: ["npm", "start"]
+volumes:
+  postgres_data:
+  node_modules:
